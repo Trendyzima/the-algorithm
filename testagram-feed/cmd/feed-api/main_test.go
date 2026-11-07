@@ -32,7 +32,7 @@ func TestRankAcceptsValidRequestAndSetsSecurityHeaders(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", response.Code, response.Body.String())
 	}
-	if response.Header().Get("Cache-Control") != "no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" {
+	if response.Header().Get("Cache-Control") != "no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" || response.Header().Get("X-Testagram-API-Version") != "1" || response.Header().Get("X-Request-ID") == "" {
 		t.Fatalf("security headers missing: %#v", response.Header())
 	}
 }
