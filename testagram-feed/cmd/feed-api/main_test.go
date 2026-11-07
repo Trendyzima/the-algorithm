@@ -14,6 +14,8 @@ const validRequest = "{\"limit\":1,\"candidates\":[{\"id\":\"post-1\",\"authorId
 func sendRequest(handler http.Handler, body string, token bool) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Testagram-API-Version", "1")
+	req.Header.Set("X-Request-ID", "test-request-1")
 	if token {
 		req.Header.Set("Authorization", "Bearer "+testToken)
 	}
@@ -32,13 +34,15 @@ func TestRankAcceptsValidRequestAndSetsSecurityHeaders(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", response.Code, response.Body.String())
 	}
-	if response.Header().Get("Cache-Control") != "no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" {
+	if response.Header().Get("Cache-Control") != "no-store" || response.Header().Get("X-Content-Type-Options") != "nosniff" || response.Header().Get("X-Testagram-API-Version") != "1" || response.Header().Get("X-Request-ID") == "" {
 		t.Fatalf("security headers missing: %#v", response.Header())
 	}
 }
 func TestRankRejectsWrongContentType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(validRequest))
 	req.Header.Set("Authorization", "Bearer "+testToken)
+	req.Header.Set("X-Testagram-API-Version", "1")
+	req.Header.Set("X-Request-ID", "wrong-content-type")
 	req.Header.Set("Content-Type", "text/plain")
 	response := httptest.NewRecorder()
 	newHandler(testToken).ServeHTTP(response, req)
@@ -79,10 +83,50 @@ func TestRankRejectsOversizedBody(t *testing.T) {
 	body := "{\"limit\":1,\"candidates\":[{\"id\":\"p\",\"authorId\":\"a\",\"visible\":true}],\"padding\":\"" + strings.Repeat("x", maxRequestBody) + "\"}"
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+testToken)
+	req.Header.Set("X-Testagram-API-Version", "1")
+	req.Header.Set("X-Request-ID", "oversized-body")
 	req.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	newHandler(testToken).ServeHTTP(response, req)
 	if response.Code != http.StatusRequestEntityTooLarge {
 		t.Fatalf("expected 413, got %d", response.Code)
+	}
+}
+
+func TestRankRequiresSupportedVersionAndRequestID(t *testing.T) {
+	for name, headers := range map[string]map[string]string{
+		"missing version":     {"X-Request-ID": "request-1"},
+		"unsupported version": {"X-Testagram-API-Version": "2", "X-Request-ID": "request-1"},
+		"missing request ID":  {"X-Testagram-API-Version": "1"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(validRequest))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+testToken)
+			for key, value := range headers {
+				req.Header.Set(key, value)
+			}
+			response := httptest.NewRecorder()
+			newHandler(testToken).ServeHTTP(response, req)
+			if response.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400, got %d", response.Code)
+			}
+		})
+	}
+}
+
+func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
+	cases := map[string]string{
+		"duplicate IDs":       "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"visible\":true}]}",
+		"missing author":      "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"visible\":true}]}",
+		"invisible candidate": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":false}]}",
+	}
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			response := sendRequest(newHandler(testToken), body, true)
+			if response.Code != http.StatusBadRequest {
+				t.Fatalf("expected 400, got %d: %s", response.Code, response.Body.String())
+			}
+		})
 	}
 }

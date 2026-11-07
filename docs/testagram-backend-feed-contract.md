@@ -19,3 +19,12 @@ The Algorithm service is a private ranking component, not a second application d
 - Load-test candidate sizes, p95/p99 latency, concurrency, cache hit rate and failure behavior before enabling production ranking.
 
 This contract does not claim that the upstream X recommendation repository is already a deployable Testagram ranker. The existing Testagram-specific feed service implementation must be reviewed and tested independently before production deployment.
+
+
+## API transport contract
+
+- Internal endpoint: `POST /v1/feed/rank`; readiness: `GET /readyz`.
+- Backend sends `Authorization: Bearer <service token>`, `Content-Type: application/json`, `Accept: application/json`, `X-Testagram-API-Version: 1` and a traceable `X-Request-ID`.
+- The ranker accepts at most 200 authorized candidates and returns at most the requested 50 IDs. It does not fetch, hydrate or authorize posts.
+- Responses are private/no-store. The service echoes the request ID and API version headers.
+- The Backend owns retries and fallback policy. Do not retry a ranking POST automatically unless the caller explicitly treats the operation as safe.
