@@ -1,8 +1,8 @@
 package ranking
 
 import (
-	"testing"
 	"math"
+	"testing"
 	"time"
 )
 
