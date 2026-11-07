@@ -54,6 +54,15 @@ func newHandler(token string) http.Handler {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 			return
 		}
+		if r.Header.Get("X-Testagram-API-Version") != "1" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported or missing API version"})
+			return
+		}
+		requestID := strings.TrimSpace(r.Header.Get("X-Request-ID"))
+		if requestID == "" || len(requestID) > 128 || strings.ContainsAny(requestID, "\\r\\n") {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "valid X-Request-ID is required"})
+			return
+		}
 		mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if err != nil || mediaType != "application/json" {
 			writeJSON(w, http.StatusUnsupportedMediaType, map[string]string{"error": "content type must be application/json"})
@@ -84,6 +93,20 @@ func newHandler(token string) http.Handler {
 		if input.Limit < 1 || input.Limit > 50 {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "limit must be between 1 and 50"})
 			return
+		}
+		seen := make(map[string]struct{}, len(input.Candidates))
+		for _, candidate := range input.Candidates {
+			id := strings.TrimSpace(candidate.ID)
+			authorID := strings.TrimSpace(candidate.AuthorID)
+			if id == "" || authorID == "" || !candidate.Visible {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "candidates must have unique IDs, authors and visible=true"})
+				return
+			}
+			if _, exists := seen[id]; exists {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "duplicate candidate ID"})
+				return
+			}
+			seen[id] = struct{}{}
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"items": ranking.Rank(input)})
 	})
