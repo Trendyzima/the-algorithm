@@ -110,9 +110,9 @@ func TestRankRequiresSupportedVersionAndRequestID(t *testing.T) {
 
 func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 	cases := map[string]string{
-		"duplicate IDs": "{\\"limit\\":2,\\"candidates\\":[{\\"id\\":\\"p1\\",\\"authorId\\":\\"a1\\",\\"visible\\":true},{\\"id\\":\\"p1\\",\\"authorId\\":\\"a2\\",\\"visible\\":true}]}",
-		"missing author": "{\\"limit\\":1,\\"candidates\\":[{\\"id\\":\\"p1\\",\\"authorId\\":\\" \\",\\"visible\\":true}]}",
-		"invisible candidate": "{\\"limit\\":1,\\"candidates\\":[{\\"id\\":\\"p1\\",\\"authorId\\":\\"a1\\",\\"visible\\":false}]}",
+		"duplicate IDs": "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"visible\":true}]}",
+		"missing author": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"visible\":true}]}",
+		"invisible candidate": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":false}]}",
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
