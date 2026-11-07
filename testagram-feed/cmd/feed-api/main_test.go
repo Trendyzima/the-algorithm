@@ -95,9 +95,9 @@ func TestRankRejectsOversizedBody(t *testing.T) {
 
 func TestRankRequiresSupportedVersionAndRequestID(t *testing.T) {
 	for name, headers := range map[string]map[string]string{
-		"missing version":       {"X-Request-ID": "request-1"},
-		"unsupported version":  {"X-Testagram-API-Version": "2", "X-Request-ID": "request-1"},
-		"missing request ID":   {"X-Testagram-API-Version": "1"},
+		"missing version":     {"X-Request-ID": "request-1"},
+		"unsupported version": {"X-Testagram-API-Version": "2", "X-Request-ID": "request-1"},
+		"missing request ID":  {"X-Testagram-API-Version": "1"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(validRequest))
@@ -117,8 +117,8 @@ func TestRankRequiresSupportedVersionAndRequestID(t *testing.T) {
 
 func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 	cases := map[string]string{
-		"duplicate IDs": "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"visible\":true}]}",
-		"missing author":       "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"visible\":true}]}",
+		"duplicate IDs":       "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"visible\":true}]}",
+		"missing author":      "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"visible\":true}]}",
 		"invisible candidate": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":false}]}",
 	}
 	for name, body := range cases {
