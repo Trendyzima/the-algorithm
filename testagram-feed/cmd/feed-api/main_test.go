@@ -41,6 +41,8 @@ func TestRankAcceptsValidRequestAndSetsSecurityHeaders(t *testing.T) {
 func TestRankRejectsWrongContentType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(validRequest))
 	req.Header.Set("Authorization", "Bearer "+testToken)
+	req.Header.Set("X-Testagram-API-Version", "1")
+	req.Header.Set("X-Request-ID", "wrong-content-type")
 	req.Header.Set("Content-Type", "text/plain")
 	response := httptest.NewRecorder()
 	newHandler(testToken).ServeHTTP(response, req)
@@ -81,6 +83,8 @@ func TestRankRejectsOversizedBody(t *testing.T) {
 	body := "{\"limit\":1,\"candidates\":[{\"id\":\"p\",\"authorId\":\"a\",\"visible\":true}],\"padding\":\"" + strings.Repeat("x", maxRequestBody) + "\"}"
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+testToken)
+	req.Header.Set("X-Testagram-API-Version", "1")
+	req.Header.Set("X-Request-ID", "oversized-body")
 	req.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	newHandler(testToken).ServeHTTP(response, req)
