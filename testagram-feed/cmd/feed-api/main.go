@@ -59,7 +59,7 @@ func newHandler(token string) http.Handler {
 			return
 		}
 		requestID := strings.TrimSpace(r.Header.Get("X-Request-ID"))
-		if requestID == "" || len(requestID) > 128 || strings.ContainsAny(requestID, "\\r\\n") {
+		if requestID == "" || len(requestID) > 128 || strings.ContainsAny(requestID, "\r\n") {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "valid X-Request-ID is required"})
 			return
 		}
