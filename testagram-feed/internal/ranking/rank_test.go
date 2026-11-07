@@ -2,6 +2,7 @@ package ranking
 
 import (
 	"testing"
+	"math"
 	"time"
 )
 
@@ -74,5 +75,38 @@ func TestRankRejectsMalformedAndDuplicateCandidateIDs(t *testing.T) {
 	}})
 	if len(got) != 1 || got[0].ID != "post-1" || got[0].AuthorID != "author-1" {
 		t.Fatalf("expected one canonical candidate, got %#v", got)
+	}
+}
+
+func TestRankHonorsSensitivePreferenceAndFutureTimestamps(t *testing.T) {
+	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
+	candidates := []Candidate{
+		{ID: "sensitive", AuthorID: "author-a", Visible: true, Sensitive: true, CreatedAt: now},
+		{ID: "future", AuthorID: "author-b", Visible: true, CreatedAt: now.Add(24 * time.Hour)},
+	}
+	hidden := Rank(Request{Now: now, Limit: 10, AllowSensitive: false, Candidates: candidates})
+	if len(hidden) != 1 || hidden[0].ID != "future" {
+		t.Fatalf("sensitive candidate should be excluded, got %#v", hidden)
+	}
+	allowed := Rank(Request{Now: now, Limit: 10, AllowSensitive: true, Candidates: candidates})
+	if len(allowed) != 2 {
+		t.Fatalf("expected sensitive candidate when explicitly allowed, got %#v", allowed)
+	}
+	// A future timestamp is treated as age zero, never as a score bonus.
+	for _, item := range allowed {
+		if item.ID == "future" && item.Score > 0.3000001 {
+			t.Fatalf("future timestamp received an unexpected recency bonus: %#v", item)
+		}
+	}
+}
+
+func TestRankNeverReturnsNonFiniteScores(t *testing.T) {
+	now := time.Now().UTC()
+	got := Rank(Request{Now: now, Candidates: []Candidate{{
+		ID: "candidate", AuthorID: "author", Visible: true, CreatedAt: now,
+		Features: Features{MutualAffinity: math.NaN(), InterestAffinity: math.Inf(1), Quality: math.Inf(-1)},
+	}}})
+	if len(got) != 1 || math.IsNaN(got[0].Score) || math.IsInf(got[0].Score, 0) || got[0].Score < 0 || got[0].Score > 1 {
+		t.Fatalf("ranker emitted a non-finite or out-of-range score: %#v", got)
 	}
 }
