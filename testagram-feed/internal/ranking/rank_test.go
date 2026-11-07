@@ -110,3 +110,16 @@ func TestRankNeverReturnsNonFiniteScores(t *testing.T) {
 		t.Fatalf("ranker emitted a non-finite or out-of-range score: %#v", got)
 	}
 }
+
+func TestRankFailsClosedOnNonFiniteReportRisk(t *testing.T) {
+	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
+	got := Rank(Request{Now: now, Candidates: []Candidate{
+		{ID: "safe", AuthorID: "author-safe", Visible: true, CreatedAt: now, Features: Features{ReportRisk: 0.1}},
+		{ID: "nan-risk", AuthorID: "author-nan", Visible: true, CreatedAt: now, Features: Features{ReportRisk: math.NaN()}},
+		{ID: "positive-infinite-risk", AuthorID: "author-inf", Visible: true, CreatedAt: now, Features: Features{ReportRisk: math.Inf(1)}},
+		{ID: "negative-infinite-risk", AuthorID: "author-neg-inf", Visible: true, CreatedAt: now, Features: Features{ReportRisk: math.Inf(-1)}},
+	}})
+	if len(got) != 1 || got[0].ID != "safe" {
+		t.Fatalf("non-finite report-risk candidates must fail closed, got %#v", got)
+	}
+}
