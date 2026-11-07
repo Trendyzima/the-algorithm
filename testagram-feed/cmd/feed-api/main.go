@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"mime"
@@ -114,6 +115,10 @@ func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Testagram-API-Version", "1")
+		id := strings.TrimSpace(r.Header.Get("X-Request-ID"))
+		if id == "" || len(id) > 128 || strings.ContainsAny(id, "\\r\\n") { id = fmt.Sprintf("ranker-%d", time.Now().UnixNano()) }
+		w.Header().Set("X-Request-ID", id)
 		next.ServeHTTP(w, r)
 	})
 }
