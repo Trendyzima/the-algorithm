@@ -117,7 +117,9 @@ func securityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Testagram-API-Version", "1")
 		id := strings.TrimSpace(r.Header.Get("X-Request-ID"))
-		if id == "" || len(id) > 128 || strings.ContainsAny(id, "\r\n") { id = fmt.Sprintf("ranker-%d", time.Now().UnixNano()) }
+		if id == "" || len(id) > 128 || strings.ContainsAny(id, "\r\n") {
+			id = fmt.Sprintf("ranker-%d", time.Now().UnixNano())
+		}
 		w.Header().Set("X-Request-ID", id)
 		next.ServeHTTP(w, r)
 	})
