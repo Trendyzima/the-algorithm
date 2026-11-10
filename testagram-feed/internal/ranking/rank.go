@@ -121,15 +121,25 @@ func Rank(in Request) []Result {
 		return items[i].result.ID < items[j].result.ID
 	})
 
-	// Avoid a single prolific author dominating the first page.
+	// Prefer a diverse first pass, then fill remaining slots with lower-ranked
+	// candidates. Returning a short page while the Backend advances its
+	// chronological cursor would permanently skip candidates not returned here.
 	const maxPerAuthor = 2
 	counts := make(map[string]int)
+	overflow := make([]scored, 0)
 	out := make([]Result, 0, limit)
 	for _, item := range items {
 		if counts[item.result.AuthorID] >= maxPerAuthor {
+			overflow = append(overflow, item)
 			continue
 		}
 		counts[item.result.AuthorID]++
+		out = append(out, item.result)
+		if len(out) == limit {
+			return out
+		}
+	}
+	for _, item := range overflow {
 		out = append(out, item.result)
 		if len(out) == limit {
 			break
