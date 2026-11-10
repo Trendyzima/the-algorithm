@@ -35,8 +35,8 @@ func TestRankCapsAuthorDominanceAndIsDeterministic(t *testing.T) {
 		{ID: "b1", AuthorID: "author-b", Visible: true, CreatedAt: now, Features: Features{Quality: 1}},
 	}}
 	first, second := Rank(in), Rank(in)
-	if len(first) != 3 {
-		t.Fatalf("expected author diversity cap, got %d", len(first))
+	if len(first) != 4 {
+		t.Fatalf("expected the requested page to be filled after diversity pass, got %d", len(first))
 	}
 	if first[0].ID != second[0].ID || first[1].ID != second[1].ID {
 		t.Fatal("ranking must be deterministic")
@@ -47,8 +47,17 @@ func TestRankCapsAuthorDominanceAndIsDeterministic(t *testing.T) {
 			authorACount++
 		}
 	}
-	if authorACount != 2 {
-		t.Fatalf("expected exactly two posts from author-a, got %d", authorACount)
+	if authorACount != 3 {
+		t.Fatalf("expected the diversity pass to prioritize two author-a posts and then fill remaining slots, got %d", authorACount)
+	}
+	firstPassAuthorACount := 0
+	for _, item := range first[:3] {
+		if item.AuthorID == "author-a" {
+			firstPassAuthorACount++
+		}
+	}
+	if firstPassAuthorACount != 2 {
+		t.Fatalf("first diversity pass included %d author-a posts, want 2", firstPassAuthorACount)
 	}
 }
 
