@@ -84,4 +84,4 @@ Before enabling this service in production: run tests and race detector; add req
 
 ## Container deployment
 
-The standalone service image is built from this directory using testagram-feed/Dockerfile and published as ghcr.io/trendyzima/testagram-feed when the module is merged to main. It listens on port 8092. Run it only on a private service network; do not publish 8092 to the Internet. The Data Centre Compose runtime injects INTERNAL_TOKEN and the Backend connects through ALGORITHM_ENDPOINT=http://algorithm:8092, the exact environment variable consumed by the fresh Backend API.
+The standalone service image is built from this directory using testagram-feed/Dockerfile and published as ghcr.io/trendyzima/testagram-feed by the container workflow. It listens on port 8092. Run it only on the private testagram-platform network; do not publish 8092 to the Internet. The Data Centre Compose overlay injects INTERNAL_TOKEN. The native PostgreSQL-backed Backend connects with ALGORITHM_URL=http://algorithm:8092 and ALGORITHM_INTERNAL_TOKEN; do not use the fresh-preview API's ALGORITHM_ENDPOINT variable for this deployment.
