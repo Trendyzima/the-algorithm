@@ -8,7 +8,7 @@ This is a standalone Testagram-owned ranking service added alongside (not inside
 2. Backend candidate adapters gather a bounded candidate set from local posts, followed accounts, recommendations, and eligible federated posts.
 3. Backend sends candidates plus server-derived user signals to this ranker over a private authenticated network.
 4. This service removes excluded candidates, scores the remainder, applies author diversity, and returns ordered IDs with explainable reasons.
-5. Backend rechecks visibility/authorization and hydrates canonical post objects before returning the feed to XClone.
+5. Backend rechecks visibility/authorization and hydrates canonical post objects before returning the feed to the Flutter client.
 
 The ranker must never become the source of truth for users, posts, follows, blocks, likes, or moderation decisions. Do not expose this internal endpoint directly to browsers or Android clients.
 
@@ -16,7 +16,7 @@ The ranker must never become the source of truth for users, posts, follows, bloc
 
 | Repository | Owns | Ranker boundary |
 | --- | --- | --- |
-| [XClone](https://github.com/Trendyzima/XClone-9b4dz1-9b4dz1-8936-20260809tr) | Web/mobile user interface | Never calls this private service directly |
+| [Testagram Flutter Client](https://github.com/Trendyzima/testagram-flutter-client-) | Web/mobile user interface | Never calls this private service directly |
 | [Testagram Backend](https://github.com/Trendyzima/Testagram-backend-) | Canonical Appwrite identity, posts, social graph, permissions, visibility and feed orchestration | Authenticates the user, builds candidates, sends server-derived signals, rechecks access and hydrates canonical posts |
 | [Federated Content](https://github.com/Trendyzima/federated-content) | ActivityPub protocol state, signed inbox and remote delivery | May supply eligible federated candidates through Backend-owned adapters; does not grant visibility |
 | **the-algorithm (this module)** | Candidate ranking and recommendation scoring | Returns ordered IDs and explainable reasons only; never owns source records or authorization |
