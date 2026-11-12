@@ -53,6 +53,25 @@ func TestRankTopicsDeduplicatesAndRejectsInvalidCandidates(t *testing.T) {
 	}
 }
 
+func TestRankTopicsScoresAreIndependentOfCandidateOrder(t *testing.T) {
+	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
+	candidates := []TopicCandidate{
+		{Tag: "small", PostsCount: 10, LastUsedAt: now, InterestAffinity: 0.2},
+		{Tag: "large", PostsCount: 1000, LastUsedAt: now, InterestAffinity: 0.2},
+		{Tag: "medium", PostsCount: 100, LastUsedAt: now, InterestAffinity: 0.2},
+	}
+	first := RankTopics(TopicRequest{Now: now, Candidates: candidates, Limit: 10})
+	second := RankTopics(TopicRequest{Now: now, Candidates: []TopicCandidate{candidates[1], candidates[2], candidates[0]}, Limit: 10})
+	if len(first) != len(second) {
+		t.Fatalf("candidate order changed result size: %d != %d", len(first), len(second))
+	}
+	for i := range first {
+		if first[i].Tag != second[i].Tag || first[i].Score != second[i].Score {
+			t.Fatalf("candidate order changed rank at %d: %+v != %+v", i, first[i], second[i])
+		}
+	}
+}
+
 func TestRankTopicsExcludesOutsideSevenDayWindowAndFutureData(t *testing.T) {
 	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
 	got := RankTopics(TopicRequest{
