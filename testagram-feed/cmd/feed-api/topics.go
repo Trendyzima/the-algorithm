@@ -74,5 +74,3 @@ func topicRankHandler(token string) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, map[string]any{"items": ranking.RankTopics(input)})
 	}
 }
-
-var _ = time.Time{}
