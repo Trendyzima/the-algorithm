@@ -9,8 +9,8 @@ import (
 func TestRankTopicsUsesVolumeRecencyAndViewerAffinity(t *testing.T) {
 	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
 	got := RankTopics(TopicRequest{
-		Now: now,
-		Limit: 10,
+		Now:        now,
+		Limit:      10,
 		Candidates: []TopicCandidate{
 			{Tag: "generic", PostsCount: 1000, LastUsedAt: now.Add(-20 * time.Hour), InterestAffinity: 0.05},
 			{Tag: "my-interest", PostsCount: 120, LastUsedAt: now.Add(-2 * time.Hour), InterestAffinity: 0.95},
@@ -34,8 +34,8 @@ func TestRankTopicsUsesVolumeRecencyAndViewerAffinity(t *testing.T) {
 func TestRankTopicsDeduplicatesAndRejectsInvalidCandidates(t *testing.T) {
 	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
 	got := RankTopics(TopicRequest{
-		Now: now,
-		Limit: 10,
+		Now:        now,
+		Limit:      10,
 		Candidates: []TopicCandidate{
 			{Tag: "Testagram", PostsCount: 10, LastUsedAt: now, InterestAffinity: 0.5},
 			{Tag: "testagram", PostsCount: 20, LastUsedAt: now, InterestAffinity: 0.8},
@@ -56,8 +56,8 @@ func TestRankTopicsDeduplicatesAndRejectsInvalidCandidates(t *testing.T) {
 func TestRankTopicsExcludesOutsideSevenDayWindowAndFutureData(t *testing.T) {
 	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
 	got := RankTopics(TopicRequest{
-		Now: now,
-		Limit: 10,
+		Now:        now,
+		Limit:      10,
 		Candidates: []TopicCandidate{
 			{Tag: "current", PostsCount: 10, LastUsedAt: now.Add(-time.Hour), InterestAffinity: 0.5},
 			{Tag: "stale", PostsCount: 100000, LastUsedAt: now.Add(-8 * 24 * time.Hour), InterestAffinity: 1},
