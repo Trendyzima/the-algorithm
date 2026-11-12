@@ -1,0 +1,58 @@
+name: Testagram feed service CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "testagram-feed/**"
+      - ".github/workflows/testagram-feed-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "testagram-feed/**"
+      - ".github/workflows/testagram-feed-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: testagram-feed-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Testagram feed module
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: testagram-feed
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.3"
+          cache: true
+          cache-dependency-path: testagram-feed/go.sum
+
+      - name: Verify formatting
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "The following Go files are not gofmt-formatted:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Run unit and integration tests with race detector
+        run: go test -race -count=1 ./...
+
+      - name: Run static analysis
+        run: go vet ./...
+
+      - name: Build feed API
+        run: go build -trimpath -o /tmp/testagram-feed ./cmd/feed-api
