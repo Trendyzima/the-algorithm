@@ -55,13 +55,11 @@ func RankTopics(in TopicRequest) []RankedTopic {
 		limit = 50
 	}
 
-	seen := make(map[string]struct{}, len(in.Candidates))
-	items := make([]scoredTopic, 0, min(len(in.Candidates), 200))
+	candidateLimit := min(len(in.Candidates), 200)
+	valid := make([]TopicCandidate, 0, candidateLimit)
+	seen := make(map[string]struct{}, candidateLimit)
 	maxCount := int64(1)
-	for i, candidate := range in.Candidates {
-		if i >= 200 {
-			break
-		}
+	for _, candidate := range in.Candidates[:candidateLimit] {
 		tag := strings.ToLower(strings.TrimSpace(candidate.Tag))
 		if !ValidTopicTag(tag) || candidate.PostsCount < 1 || candidate.LastUsedAt.IsZero() ||
 			math.IsNaN(candidate.InterestAffinity) || math.IsInf(candidate.InterestAffinity, 0) {
@@ -71,14 +69,20 @@ func RankTopics(in TopicRequest) []RankedTopic {
 		if age > 7*24*time.Hour || age < -5*time.Minute {
 			continue
 		}
-		if candidate.PostsCount > maxCount {
-			maxCount = candidate.PostsCount
-		}
 		if _, duplicate := seen[tag]; duplicate {
 			continue
 		}
 		seen[tag] = struct{}{}
+		candidate.Tag = tag
+		valid = append(valid, candidate)
+		if candidate.PostsCount > maxCount {
+			maxCount = candidate.PostsCount
+		}
+	}
 
+	items := make([]scoredTopic, 0, len(valid))
+	for _, candidate := range valid {
+		age := now.Sub(candidate.LastUsedAt)
 		if age < 0 {
 			age = 0
 		}
@@ -99,7 +103,7 @@ func RankTopics(in TopicRequest) []RankedTopic {
 			reasons = append(reasons, "matches-viewer-interests")
 		}
 		items = append(items, scoredTopic{
-			item:     RankedTopic{Tag: tag, PostsCount: candidate.PostsCount, Score: score, Reasons: reasons},
+			item:     RankedTopic{Tag: candidate.Tag, PostsCount: candidate.PostsCount, Score: score, Reasons: reasons},
 			lastUsed: candidate.LastUsedAt,
 		})
 	}
