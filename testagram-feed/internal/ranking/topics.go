@@ -99,7 +99,7 @@ func RankTopics(in TopicRequest) []RankedTopic {
 			reasons = append(reasons, "matches-viewer-interests")
 		}
 		items = append(items, scoredTopic{
-			item: RankedTopic{Tag: tag, PostsCount: candidate.PostsCount, Score: score, Reasons: reasons},
+			item:     RankedTopic{Tag: tag, PostsCount: candidate.PostsCount, Score: score, Reasons: reasons},
 			lastUsed: candidate.LastUsedAt,
 		})
 	}
