@@ -13,15 +13,15 @@ func TestRankTopicsUsesVolumeRecencyAndViewerAffinity(t *testing.T) {
 		Limit: 10,
 		Candidates: []TopicCandidate{
 			{Tag: "generic", PostsCount: 1000, LastUsedAt: now.Add(-20 * time.Hour), InterestAffinity: 0.05},
-			{Tag: "my-interest", PostsCount: 120, LastUsedAt: now.Add(-2 * time.Hour), InterestAffinity: 0.95},
+			{Tag: "my_interest", PostsCount: 120, LastUsedAt: now.Add(-2 * time.Hour), InterestAffinity: 0.95},
 			{Tag: "stale", PostsCount: 1000, LastUsedAt: now.Add(-6 * 24 * time.Hour), InterestAffinity: 0},
 		},
 	})
 	if len(got) != 3 {
 		t.Fatalf("got %d topics, want 3", len(got))
 	}
-	if got[0].Tag != "my-interest" {
-		t.Fatalf("personalized topic ranked first = %q, want my-interest; all=%+v", got[0].Tag, got)
+	if got[0].Tag != "my_interest" {
+		t.Fatalf("personalized topic ranked first = %q, want my_interest; all=%+v", got[0].Tag, got)
 	}
 	if got[0].Score <= got[1].Score {
 		t.Fatalf("topic scores are not descending: %+v", got)
