@@ -53,6 +53,22 @@ func TestRankTopicsDeduplicatesAndRejectsInvalidCandidates(t *testing.T) {
 	}
 }
 
+func TestRankTopicsExcludesOutsideSevenDayWindowAndFutureData(t *testing.T) {
+	now := time.Date(2026, 11, 12, 10, 0, 0, 0, time.UTC)
+	got := RankTopics(TopicRequest{
+		Now: now,
+		Limit: 10,
+		Candidates: []TopicCandidate{
+			{Tag: "current", PostsCount: 10, LastUsedAt: now.Add(-time.Hour), InterestAffinity: 0.5},
+			{Tag: "stale", PostsCount: 100000, LastUsedAt: now.Add(-8 * 24 * time.Hour), InterestAffinity: 1},
+			{Tag: "future-corrupt", PostsCount: 100000, LastUsedAt: now.Add(10 * time.Minute), InterestAffinity: 1},
+		},
+	})
+	if len(got) != 1 || got[0].Tag != "current" {
+		t.Fatalf("outside-window topics must be excluded, got %+v", got)
+	}
+}
+
 func TestValidTopicTagAcceptsUnicodeAndRejectsUnsafeInput(t *testing.T) {
 	for _, value := range []string{"testagram", "Kiswahili", "東京", "kenya_2026"} {
 		if !ValidTopicTag(value) {
