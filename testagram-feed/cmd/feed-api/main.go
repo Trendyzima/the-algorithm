@@ -110,6 +110,7 @@ func newHandler(token string) http.Handler {
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"items": ranking.Rank(input)})
 	})
+	mux.HandleFunc("POST /v1/topics/rank", topicRankHandler(token))
 	return securityHeaders(mux)
 }
 
