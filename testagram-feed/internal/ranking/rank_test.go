@@ -120,6 +120,17 @@ func TestRankNeverReturnsNonFiniteScores(t *testing.T) {
 	}
 }
 
+func TestRankFailsClosedOnNegativeReportRisk(t *testing.T) {
+	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
+	got := Rank(Request{Now: now, Candidates: []Candidate{
+		{ID: "safe", AuthorID: "author-safe", Visible: true, CreatedAt: now, Features: Features{ReportRisk: 0.1}},
+		{ID: "negative-risk", AuthorID: "author-negative", Visible: true, CreatedAt: now, Features: Features{ReportRisk: -0.01}},
+	}})
+	if len(got) != 1 || got[0].ID != "safe" {
+		t.Fatalf("negative report-risk values must fail closed, got %#v", got)
+	}
+}
+
 func TestRankFailsClosedOnNonFiniteReportRisk(t *testing.T) {
 	now := time.Date(2026, 11, 7, 12, 0, 0, 0, time.UTC)
 	got := Rank(Request{Now: now, Candidates: []Candidate{
