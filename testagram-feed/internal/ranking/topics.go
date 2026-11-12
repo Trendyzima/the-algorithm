@@ -55,14 +55,9 @@ func RankTopics(in TopicRequest) []RankedTopic {
 		limit = 50
 	}
 
-	maxCount := int64(1)
-	for _, candidate := range in.Candidates {
-		if candidate.PostsCount > maxCount {
-			maxCount = candidate.PostsCount
-		}
-	}
 	seen := make(map[string]struct{}, len(in.Candidates))
 	items := make([]scoredTopic, 0, min(len(in.Candidates), 200))
+	maxCount := int64(1)
 	for i, candidate := range in.Candidates {
 		if i >= 200 {
 			break
@@ -72,12 +67,18 @@ func RankTopics(in TopicRequest) []RankedTopic {
 			math.IsNaN(candidate.InterestAffinity) || math.IsInf(candidate.InterestAffinity, 0) {
 			continue
 		}
+		age := now.Sub(candidate.LastUsedAt)
+		if age > 7*24*time.Hour || age < -5*time.Minute {
+			continue
+		}
+		if candidate.PostsCount > maxCount {
+			maxCount = candidate.PostsCount
+		}
 		if _, duplicate := seen[tag]; duplicate {
 			continue
 		}
 		seen[tag] = struct{}{}
 
-		age := now.Sub(candidate.LastUsedAt)
 		if age < 0 {
 			age = 0
 		}
