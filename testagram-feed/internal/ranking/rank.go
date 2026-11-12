@@ -103,7 +103,7 @@ func Rank(in Request) []Result {
 		// Report risk is a safety signal: non-finite values must never be
 		// normalized to zero by clamp01, because that would turn corrupt or
 		// missing risk data into an apparent clean bill of health.
-		if math.IsNaN(c.Features.ReportRisk) || math.IsInf(c.Features.ReportRisk, 0) || c.Features.ReportRisk >= 0.8 {
+		if math.IsNaN(c.Features.ReportRisk) || math.IsInf(c.Features.ReportRisk, 0) || c.Features.ReportRisk < 0 || c.Features.ReportRisk >= 0.8 {
 			continue
 		}
 
