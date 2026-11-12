@@ -19,6 +19,73 @@ paths:
       security: []
       responses:
         '200': {description: Ranker is ready}
+  /v1/topics/rank:
+    post:
+      operationId: rankTrendingTopics
+      summary: Rank Backend-authorized public hashtag candidates
+      description: Backend owns candidate retrieval, visibility, blocks, mutes and final hydration. The ranker only orders the supplied topics.
+      parameters:
+        - in: header
+          name: X-Testagram-API-Version
+          required: true
+          schema: {type: string, const: '1'}
+        - in: header
+          name: X-Request-ID
+          required: true
+          schema: {type: string, minLength: 1, maxLength: 128}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [limit, candidates]
+              properties:
+                now: {type: string, format: date-time}
+                limit: {type: integer, minimum: 1, maximum: 50}
+                candidates:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [tag, postsCount, lastUsedAt, interestAffinity]
+                    properties:
+                      tag: {type: string, minLength: 1, maxLength: 64, description: Unicode letters, numbers or underscores}
+                      postsCount: {type: integer, minimum: 1, maximum: 1000000000}
+                      lastUsedAt: {type: string, format: date-time}
+                      interestAffinity: {type: number, minimum: 0, maximum: 1}
+      responses:
+        '200':
+          description: Deterministically ranked topics, based only on the supplied candidate set
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    maxItems: 50
+                    items:
+                      type: object
+                      required: [tag, postsCount, score, reasons]
+                      properties:
+                        tag: {type: string}
+                        postsCount: {type: integer}
+                        score: {type: number, minimum: 0, maximum: 1}
+                        reasons:
+                          type: array
+                          maxItems: 3
+                          items:
+                            type: string
+                            enum: [recent, high-public-volume, matches-viewer-interests]
+        '400': {description: Invalid request, tag, timestamp or candidate bounds}
+        '401': {description: Invalid internal service bearer}
+        '413': {description: Request body too large}
+        '415': {description: Content-Type must be application/json}
   /v1/feed/rank:
     post:
       operationId: rankFeedCandidates

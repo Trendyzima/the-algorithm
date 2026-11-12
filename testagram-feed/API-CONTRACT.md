@@ -5,6 +5,10 @@ The Algorithm exposes a private ranking API. It is not a public product API and 
 ## Endpoint
 `POST /v1/feed/rank`
 
+`POST /v1/topics/rank`
+
+Ranks 1-200 Backend-authorized public hashtag candidates using seven-day freshness, public-post volume and viewer interest affinity. Each candidate contains a Unicode hashtag `tag`, `postsCount`, `lastUsedAt` and a bounded `interestAffinity` from 0 to 1. The endpoint returns at most 50 deterministically ordered `{tag, postsCount, score, reasons}` entries. Tags are normalized to lowercase and deduplicated; candidates older than seven days or more than five minutes in the future are excluded. The endpoint never discovers candidates or evaluates privacy itself.
+
 Authentication: `Authorization: Bearer <INTERNAL_TOKEN>`, private service network only.
 
 Required headers:
