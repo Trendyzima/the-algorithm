@@ -43,18 +43,18 @@ func TestTopicRankReturnsRankedTopicsAndSecurityHeaders(t *testing.T) {
 
 func TestTopicRankRejectsInvalidCandidates(t *testing.T) {
 	cases := map[string]string{
-	    "invalid tag": `{"limit":1,"candidates":[{"tag":"bad tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
-	    "zero volume": `{"limit":1,"candidates":[{"tag":"tag","postsCount":0,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
-	    "affinity outside range": `{"limit":1,"candidates":[{"tag":"tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":1.1}]}`,
-	    "duplicate tags": `{"limit":2,"candidates":[{"tag":"Tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5},{"tag":"tag","postsCount":20,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
+		"invalid tag":            `{"limit":1,"candidates":[{"tag":"bad tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
+		"zero volume":            `{"limit":1,"candidates":[{"tag":"tag","postsCount":0,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
+		"affinity outside range": `{"limit":1,"candidates":[{"tag":"tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":1.1}]}`,
+		"duplicate tags":         `{"limit":2,"candidates":[{"tag":"Tag","postsCount":10,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5},{"tag":"tag","postsCount":20,"lastUsedAt":"2026-11-12T09:00:00Z","interestAffinity":0.5}]}`,
 	}
 	for name, body := range cases {
-	    t.Run(name, func(t *testing.T) {
-	        response := sendTopicRequest(newHandler(testToken), body, true)
-	        if response.Code != http.StatusBadRequest {
+		t.Run(name, func(t *testing.T) {
+			response := sendTopicRequest(newHandler(testToken), body, true)
+			if response.Code != http.StatusBadRequest {
 				t.Fatalf("expected 400, got %d: %s", response.Code, response.Body.String())
 			}
-	    })
+		})
 	}
 }
 
