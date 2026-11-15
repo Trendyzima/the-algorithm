@@ -143,3 +143,33 @@ func TestRankFailsClosedOnNonFiniteReportRisk(t *testing.T) {
 		t.Fatalf("non-finite report-risk candidates must fail closed, got %#v", got)
 	}
 }
+
+
+func TestFeedModeProfilesFavorDifferentSignals(t *testing.T) {
+	now := time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC)
+	candidates := []Candidate{
+		{ID: "followed", AuthorID: "author-a", Visible: true, CreatedAt: now, Features: Features{Following: true, InterestAffinity: 0.1, Quality: 0.5, Conversation: 0.2}},
+		{ID: "discovery", AuthorID: "author-b", Visible: true, CreatedAt: now, Features: Features{InterestAffinity: 0.9, Quality: 0.9, Conversation: 0.2}},
+	}
+	following := Rank(Request{Now: now, FeedMode: "following", Limit: 2, Candidates: candidates})
+	discover := Rank(Request{Now: now, FeedMode: "discover", Limit: 2, Candidates: candidates})
+	if len(following) != 2 || following[0].ID != "followed" {
+		t.Fatalf("following lane should prioritize followed-account signal: %#v", following)
+	}
+	if len(discover) != 2 || discover[0].ID != "discovery" {
+		t.Fatalf("discover lane should prioritize interest and quality: %#v", discover)
+	}
+}
+
+func TestRankDefaultsFeedModeAndRejectsUnsupportedModes(t *testing.T) {
+	now := time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC)
+	candidate := Candidate{ID: "post", AuthorID: "author", Visible: true, CreatedAt: now}
+	defaultMode := Rank(Request{Now: now, Limit: 1, Candidates: []Candidate{candidate}})
+	forYou := Rank(Request{Now: now, FeedMode: "for_you", Limit: 1, Candidates: []Candidate{candidate}})
+	if len(defaultMode) != 1 || len(forYou) != 1 || defaultMode[0].Score != forYou[0].Score {
+		t.Fatalf("empty feed mode must default to for_you: default=%#v for_you=%#v", defaultMode, forYou)
+	}
+	if got := Rank(Request{Now: now, FeedMode: "latest", Limit: 1, Candidates: []Candidate{candidate}}); len(got) != 0 {
+		t.Fatalf("latest must be handled by Backend chronological pagination, got %#v", got)
+	}
+}
