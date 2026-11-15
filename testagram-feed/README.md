@@ -56,6 +56,7 @@ Ranking: `POST /v1/feed/rank` with `Authorization: Bearer $INTERNAL_TOKEN`.
 ```json
 {
   "now": "2026-11-06T12:00:00Z",
+  "feedMode": "for_you",
   "limit": 20,
   "seenIds": ["post-already-seen"],
   "blockedAuthorIds": ["blocked-account"],
