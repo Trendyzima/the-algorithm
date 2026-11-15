@@ -28,6 +28,7 @@ type Features struct {
 
 type Request struct {
 	Now              time.Time   `json:"now"`
+	FeedMode         string      `json:"feedMode,omitempty"`
 	Candidates       []Candidate `json:"candidates"`
 	SeenIDs          []string    `json:"seenIds"`
 	BlockedAuthorIDs []string    `json:"blockedAuthorIds"`
@@ -57,6 +58,10 @@ const (
 // Rank applies hard visibility exclusions before relevance scoring. Candidate
 // retrieval and authoritative block/follow state remain owned by Testagram Backend.
 func Rank(in Request) []Result {
+	feedMode, ok := NormalizeFeedMode(in.FeedMode)
+	if !ok {
+		return nil
+	}
 	now := in.Now
 	if now.IsZero() {
 		now = time.Now().UTC()
@@ -107,7 +112,7 @@ func Rank(in Request) []Result {
 			continue
 		}
 
-		score, reasons := scoreCandidate(c, now)
+		score, reasons := scoreCandidate(c, now, feedMode)
 		items = append(items, scored{result: Result{ID: c.ID, AuthorID: c.AuthorID, Score: score, Reasons: reasons}, created: c.CreatedAt})
 	}
 
@@ -148,7 +153,37 @@ func Rank(in Request) []Result {
 	return out
 }
 
-func scoreCandidate(c Candidate, now time.Time) (float64, []string) {
+type scoreWeights struct {
+	recency, following, mutual, interest, quality, conversation float64
+}
+
+func weightsForFeedMode(mode string) scoreWeights {
+	switch mode {
+	case "following":
+		return scoreWeights{recency: 0.25, following: 0.28, mutual: 0.10, interest: 0.10, quality: 0.12, conversation: 0.10}
+	case "media":
+		return scoreWeights{recency: 0.35, following: 0.12, mutual: 0.08, interest: 0.12, quality: 0.20, conversation: 0.08}
+	case "discover":
+		return scoreWeights{recency: 0.25, following: 0.05, mutual: 0.05, interest: 0.30, quality: 0.20, conversation: 0.10}
+	default:
+		return scoreWeights{recency: 0.30, following: 0.18, mutual: 0.10, interest: 0.18, quality: 0.12, conversation: 0.07}
+	}
+}
+
+func NormalizeFeedMode(value string) (string, bool) {
+	value = strings.ToLower(strings.TrimSpace(value))
+	if value == "" {
+		return "for_you", true
+	}
+	switch value {
+	case "for_you", "following", "media", "discover":
+		return value, true
+	default:
+		return "", false
+	}
+}
+
+func scoreCandidate(c Candidate, now time.Time, mode string) (float64, []string) {
 	age := now.Sub(c.CreatedAt)
 	if age < 0 {
 		age = 0
@@ -156,12 +191,13 @@ func scoreCandidate(c Candidate, now time.Time) (float64, []string) {
 	// Half-life is approximately 24 hours; future timestamps cannot gain a bonus.
 	recency := math.Exp(-math.Ln2 * age.Hours() / 24)
 	f := c.Features
-	score := 0.30*recency +
-		0.18*boolFloat(f.Following) +
-		0.10*clamp01(f.MutualAffinity) +
-		0.18*clamp01(f.InterestAffinity) +
-		0.12*clamp01(f.Quality) +
-		0.07*clamp01(f.Conversation) -
+	w := weightsForFeedMode(mode)
+	score := w.recency*recency +
+		w.following*boolFloat(f.Following) +
+		w.mutual*clamp01(f.MutualAffinity) +
+		w.interest*clamp01(f.InterestAffinity) +
+		w.quality*clamp01(f.Quality) +
+		w.conversation*clamp01(f.Conversation) -
 		0.20*clamp01(f.NegativeFeedback) -
 		0.25*clamp01(f.ReportRisk)
 	score = math.Max(0, math.Min(1, score))
