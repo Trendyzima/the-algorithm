@@ -1,4 +1,15 @@
-# X's Recommendation Algorithm
+# Testagram Recommendation and Feed Ranking
+
+This repository contains two deliberately separate components:
+
+- `testagram-feed/` is the Testagram-owned, stateless Go ranking service. Its production container is built from `testagram-feed/Dockerfile` and listens on the private ranking network.
+- The Scala/Java recommendation source documented below is upstream X open-source research/reference material. Testagram does **not** deploy that entire X service graph as its production feed runtime.
+
+Testagram Backend remains authoritative for identity, candidate retrieval, posts, follows, blocks, visibility, moderation and pagination. The Go ranker returns ordered candidate IDs and explainable reasons only; Backend rechecks authorization before returning posts to clients. CDN and API-contract repositories are separate delivery/control-plane services and are not ranker callers.
+
+The product identity remains **Testagram**. X is an engineering reference for recommendation research, not the application brand.
+
+## Upstream X recommendation source (reference only)
 
 X's Recommendation Algorithm is a set of services and jobs that are responsible for serving feeds of posts and other content across all X product surfaces (e.g. For You Timeline, Search, Explore, Notifications). For an introduction to how the algorithm works, please refer to our [engineering blog](https://blog.x.com/engineering/en_us/topics/open-source/2023/twitter-recommendation-algorithm).
 
