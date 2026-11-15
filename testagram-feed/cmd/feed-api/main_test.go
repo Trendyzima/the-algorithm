@@ -131,7 +131,6 @@ func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 	}
 }
 
-
 func TestRankAcceptsNamedFeedProfilesAndRejectsLatest(t *testing.T) {
 	for _, mode := range []string{"for_you", "following", "media", "discover"} {
 		body := strings.Replace(validRequest, "\"limit\":1", "\"feedMode\":\""+mode+"\",\"limit\":1", 1)
