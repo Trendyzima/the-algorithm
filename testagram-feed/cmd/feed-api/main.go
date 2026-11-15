@@ -86,6 +86,12 @@ func newHandler(token string) http.Handler {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "request must contain exactly one JSON value"})
 			return
 		}
+		feedMode, validFeedMode := ranking.NormalizeFeedMode(input.FeedMode)
+		if !validFeedMode {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "feedMode must be for_you, following, media or discover"})
+			return
+		}
+		input.FeedMode = feedMode
 		if len(input.Candidates) < 1 || len(input.Candidates) > 200 {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "candidate count must be between 1 and 200"})
 			return
