@@ -134,8 +134,7 @@ func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 
 func TestRankAcceptsNamedFeedProfilesAndRejectsLatest(t *testing.T) {
 	for _, mode := range []string{"for_you", "following", "media", "discover"} {
-		body := strings.Replace(validRequest, "\"\"limit\"", "\"\"limit\"", 1)
-		body = strings.Replace(body, "\"limit\":1", "\"feedMode\":\""+mode+"\",\"limit\":1", 1)
+		body := strings.Replace(validRequest, "\"limit\":1", "\"feedMode\":\""+mode+"\",\"limit\":1", 1)
 		response := sendRequest(newHandler(testToken), body, true)
 		if response.Code != http.StatusOK {
 			t.Fatalf("feed mode %q: expected 200, got %d: %s", mode, response.Code, response.Body.String())
