@@ -144,7 +144,6 @@ func TestRankFailsClosedOnNonFiniteReportRisk(t *testing.T) {
 	}
 }
 
-
 func TestFeedModeProfilesFavorDifferentSignals(t *testing.T) {
 	now := time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC)
 	candidates := []Candidate{
