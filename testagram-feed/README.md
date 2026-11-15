@@ -37,6 +37,18 @@ This service is an internal dependency. Its token must remain server-side and be
 
 This is a deterministic baseline, not a trained ML model. Keep weights versioned and evaluate changes with offline replay and online A/B tests before rollout.
 
+## Feed-lane profiles
+
+Backend may pass a server-selected `feedMode` to `POST /v1/feed/rank`:
+
+- `for_you`: balanced recency, follow, interest, quality and conversation signals (default).
+- `following`: increased weight for accepted-follow affinity and conversation.
+- `media`: increased recency and quality weights; Backend has already filtered candidates to posts with authorized media.
+- `discover`: increased interest and quality weights; Backend has already selected public posts from accounts the viewer does not follow.
+- `latest`: intentionally not supported by the ranker. Backend must use chronological pagination and must not call this service.
+
+The ranker never infers the feed lane from client-controlled features, discovers candidates, or changes authorization. Unknown feed modes fail closed. Weight changes remain deterministic and should be evaluated with offline replay before production rollout.
+
 ## Run
 
 Go 1.27.3+:
