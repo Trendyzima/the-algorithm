@@ -130,3 +130,20 @@ func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 		})
 	}
 }
+
+func TestRankAcceptsNamedFeedProfilesAndRejectsLatest(t *testing.T) {
+	for _, mode := range []string{"for_you", "following", "media", "discover"} {
+		body := strings.Replace(validRequest, "\"limit\":1", "\"feedMode\":\""+mode+"\",\"limit\":1", 1)
+		response := sendRequest(newHandler(testToken), body, true)
+		if response.Code != http.StatusOK {
+			t.Fatalf("feed mode %q: expected 200, got %d: %s", mode, response.Code, response.Body.String())
+		}
+	}
+	for _, mode := range []string{"latest", "admin"} {
+		body := strings.Replace(validRequest, "\"limit\":1", "\"feedMode\":\""+mode+"\",\"limit\":1", 1)
+		response := sendRequest(newHandler(testToken), body, true)
+		if response.Code != http.StatusBadRequest {
+			t.Fatalf("feed mode %q: expected 400, got %d", mode, response.Code)
+		}
+	}
+}
