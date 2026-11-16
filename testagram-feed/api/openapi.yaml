@@ -106,27 +106,39 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [limit, candidates]
+              required: [limit, feedMode, candidates]
               properties:
                 now: {type: string, format: date-time}
                 limit: {type: integer, minimum: 1, maximum: 50}
+                feedMode: {type: string, enum: [for_you, following, latest, media, discover, federated], description: Server-selected ranking lane. This does not authorize candidates.}
                 candidates:
                   type: array
                   minItems: 1
                   maxItems: 200
                   items:
                     type: object
-                    required: [id, authorId, visible, createdAt]
+                    additionalProperties: false
+                    required: [id, authorId, source, visible, createdAt]
                     properties:
-                      id: {type: string, minLength: 1, maxLength: 128}
-                      authorId: {type: string, minLength: 1, maxLength: 128}
-                      visible: {type: boolean, const: true}
+                      id: {type: string, minLength: 1, maxLength: 256, description: Opaque stable Testagram feed candidate ID; not necessarily a UUID.}
+                      authorId: {type: string, minLength: 1, maxLength: 512, description: Opaque protocol-native or local author key; never interpreted as an account-linking assertion.}
+                      source: {type: string, enum: [native, activitypub, atproto]}
+                      sourceIdentity: {type: [string, 'null'], maxLength: 2048, description: Stable source-native actor URI or DID; provenance only, not proof of authorization.}
+                      visible: {type: boolean, const: true, description: Backend assertion that this candidate passed authorization.}
                       sensitive: {type: boolean}
                       createdAt: {type: string, format: date-time}
-                      features: {type: object}
-                seenIds: {type: array, maxItems: 500, items: {type: string, maxLength: 128}}
-                blockedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 128}}
-                mutedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 128}}
+                      features:
+                        type: object
+                        additionalProperties: true
+                        properties:
+                          following: {type: boolean}
+                          quality: {type: number, minimum: 0, maximum: 1}
+                          conversation: {type: number, minimum: 0, maximum: 1}
+                          sourceAffinity: {type: number, minimum: 0, maximum: 1}
+                          freshness: {type: number, minimum: 0, maximum: 1}
+                seenIds: {type: array, maxItems: 500, items: {type: string, maxLength: 256}}
+                blockedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 512}}
+                mutedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 512}}
                 allowSensitive: {type: boolean}
       responses:
         '200':
