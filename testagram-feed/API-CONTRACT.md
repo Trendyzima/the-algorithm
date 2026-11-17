@@ -20,7 +20,7 @@ Request: `now` is UTC RFC3339; optional `feedMode` is one of `for_you`, `followi
 
 Response: `{ "items": [{ "id": "...", "score": 0.0, "reasons": [] }] }`. IDs must be unique and drawn exclusively from the submitted candidate set. Scores are finite and normalized to [0,1]. Feed profiles apply distinct, versioned weights: `following` prioritizes accepted-follow affinity; `media` prioritizes recency and quality after Backend media filtering; `discover` prioritizes interest and quality among Backend-selected public non-followed accounts; `for_you` uses the balanced default. The service never discovers or authorizes candidates.
 
-Backend owns identity, candidate discovery, pagination, blocks, mutes, privacy, visibility, deletion, canonical hydration and the final authorization pass after ranking. The ranker must never fetch user/post records from Appwrite, Neon or object storage and must never return arbitrary IDs.
+Backend owns identity, candidate discovery, pagination, blocks, mutes, privacy, visibility, deletion, canonical hydration and the final authorization pass after ranking. The ranker must never fetch user/post records from Backend PostgreSQL, native identity/session stores or object storage and must never return arbitrary IDs. User access JWTs are not accepted; only the dedicated Backend service bearer is valid.
 
 ## Operations
 - `GET /healthz`: process liveness.
