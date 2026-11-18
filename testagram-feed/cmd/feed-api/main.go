@@ -104,8 +104,17 @@ func newHandler(token string) http.Handler {
 		for _, candidate := range input.Candidates {
 			id := strings.TrimSpace(candidate.ID)
 			authorID := strings.TrimSpace(candidate.AuthorID)
-			if id == "" || authorID == "" || !candidate.Visible {
-				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "candidates must have unique IDs, authors and visible=true"})
+			source := strings.TrimSpace(candidate.Source)
+			if id == "" || len(id) > 256 || authorID == "" || len(authorID) > 512 ||
+				id != candidate.ID || authorID != candidate.AuthorID || !candidate.Visible ||
+				len(candidate.SourceIdentity) > 2048 {
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "candidates must have bounded canonical IDs, authors, provenance and visible=true"})
+				return
+			}
+			switch source {
+			case "native", "activitypub", "atproto":
+			default:
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": "candidate source must be native, activitypub or atproto"})
 				return
 			}
 			if _, exists := seen[id]; exists {
