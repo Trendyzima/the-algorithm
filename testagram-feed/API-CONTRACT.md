@@ -16,7 +16,7 @@ Required headers:
 - `X-Testagram-API-Version: 1`
 - `X-Request-ID: <safe request correlation ID>`
 
-Request: `now` is UTC RFC3339; optional `feedMode` is one of `for_you`, `following`, `media` or `discover` (omitted defaults to `for_you`); `candidates` contains 1-200 Backend-authorized candidates with unique `id`, `authorId`, `createdAt`, `visible=true`, sensitivity flag and bounded ranking features; `limit` is 1-50. `latest` is intentionally Backend-only and must use chronological pagination rather than this ranker.
+Request: `now` is UTC RFC3339; optional `feedMode` is one of `for_you`, `following`, `media` or `discover` (omitted defaults to `for_you`); `candidates` contains 1-200 Backend-authorized candidates with unique `id` (1-256 chars), `authorId` (1-512 chars), `source` (`native`, `activitypub` or `atproto`), optional bounded `sourceIdentity` (up to 2048 chars), `createdAt`, `visible=true`, sensitivity flag and bounded ranking features; `limit` is 1-50. Source/provenance is descriptive only and never grants access or changes authorization. `latest` is intentionally Backend-only and must use chronological pagination rather than this ranker.
 
 Response: `{ "items": [{ "id": "...", "score": 0.0, "reasons": [] }] }`. IDs must be unique and drawn exclusively from the submitted candidate set. Scores are finite and normalized to [0,1]. Feed profiles apply distinct, versioned weights: `following` prioritizes accepted-follow affinity; `media` prioritizes recency and quality after Backend media filtering; `discover` prioritizes interest and quality among Backend-selected public non-followed accounts; `for_you` uses the balanced default. The service never discovers or authorizes candidates.
 

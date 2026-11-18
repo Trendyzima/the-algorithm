@@ -80,7 +80,7 @@ func TestRankRejectsMalformedAndDuplicateCandidateIDs(t *testing.T) {
 		{ID: "post-3 ", AuthorID: "author-3", Visible: true, CreatedAt: now},
 		{ID: "post-4", AuthorID: " author-4", Visible: true, CreatedAt: now},
 		{ID: "post-5", AuthorID: "author-5 ", Visible: true, CreatedAt: now},
-		{ID: string(make([]byte, 129)), AuthorID: "author-6", Visible: true, CreatedAt: now},
+		{ID: string(make([]byte, 257)), AuthorID: "author-6", Visible: true, CreatedAt: now},
 	}})
 	if len(got) != 1 || got[0].ID != "post-1" || got[0].AuthorID != "author-1" {
 		t.Fatalf("expected one canonical candidate, got %#v", got)

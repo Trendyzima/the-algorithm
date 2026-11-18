@@ -9,7 +9,7 @@ import (
 )
 
 const testToken = "test-internal-token-with-at-least-32-characters"
-const validRequest = "{\"limit\":1,\"candidates\":[{\"id\":\"post-1\",\"authorId\":\"author-1\",\"visible\":true,\"createdAt\":\"2026-11-06T12:00:00Z\"}]}"
+const validRequest = "{\"limit\":1,\"candidates\":[{\"id\":\"post-1\",\"authorId\":\"author-1\",\"source\":\"native\",\"visible\":true,\"createdAt\":\"2026-11-06T12:00:00Z\"}]}"
 
 func sendRequest(handler http.Handler, body string, token bool) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(body))
@@ -117,9 +117,9 @@ func TestRankRequiresSupportedVersionAndRequestID(t *testing.T) {
 
 func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 	cases := map[string]string{
-		"duplicate IDs":       "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"visible\":true}]}",
-		"missing author":      "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"visible\":true}]}",
-		"invisible candidate": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"visible\":false}]}",
+		"duplicate IDs":       "{\"limit\":2,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"source\":\"native\",\"visible\":true},{\"id\":\"p1\",\"authorId\":\"a2\",\"source\":\"native\",\"visible\":true}]}",
+		"missing author":      "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\" \",\"source\":\"native\",\"visible\":true}]}",
+		"invisible candidate": "{\"limit\":1,\"candidates\":[{\"id\":\"p1\",\"authorId\":\"a1\",\"source\":\"native\",\"visible\":false}]}",
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -128,6 +128,23 @@ func TestRankRejectsDuplicateOrIneligibleCandidates(t *testing.T) {
 				t.Fatalf("expected 400, got %d: %s", response.Code, response.Body.String())
 			}
 		})
+	}
+}
+
+func TestRankAcceptsBackendCandidateProvenanceAndOpaqueIDBounds(t *testing.T) {
+	longAuthor := strings.Repeat("a", 256)
+	body := "{\"limit\":1,\"candidates\":[{\"id\":\"remote-post-" + strings.Repeat("x", 180) + "\",\"authorId\":\"" + longAuthor + "\",\"source\":\"activitypub\",\"sourceIdentity\":\"https://remote.example/users/" + strings.Repeat("u", 160) + "\",\"visible\":true,\"createdAt\":\"2026-11-06T12:00:00Z\"}]}"
+	response := sendRequest(newHandler(testToken), body, true)
+	if response.Code != http.StatusOK {
+		t.Fatalf("Backend candidate contract must accept bounded remote provenance, got %d: %s", response.Code, response.Body.String())
+	}
+}
+
+func TestRankRejectsUnsupportedCandidateSource(t *testing.T) {
+	body := strings.Replace(validRequest, "\"source\":\"native\"", "\"source\":\"untrusted\"", 1)
+	response := sendRequest(newHandler(testToken), body, true)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for unsupported candidate source, got %d", response.Code)
 	}
 }
 
