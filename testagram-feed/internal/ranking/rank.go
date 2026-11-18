@@ -8,9 +8,11 @@ import (
 )
 
 type Candidate struct {
-	ID        string    `json:"id"`
-	AuthorID  string    `json:"authorId"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID             string    `json:"id"`
+	AuthorID       string    `json:"authorId"`
+	Source         string    `json:"source"`
+	SourceIdentity string    `json:"sourceIdentity,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
 	Visible   bool      `json:"visible"`
 	Sensitive bool      `json:"sensitive"`
 	Features  Features  `json:"features"`
@@ -85,7 +87,7 @@ func Rank(in Request) []Result {
 		}
 		// IDs are opaque Backend-owned identifiers. Reject malformed values
 		// rather than trimming or rewriting them, and never emit duplicate IDs.
-		if c.ID == "" || c.AuthorID == "" || len(c.ID) > 128 || len(c.AuthorID) > 128 ||
+		if c.ID == "" || c.AuthorID == "" || len(c.ID) > 256 || len(c.AuthorID) > 512 ||
 			strings.TrimSpace(c.ID) != c.ID || strings.TrimSpace(c.AuthorID) != c.AuthorID || !c.Visible {
 			continue
 		}
