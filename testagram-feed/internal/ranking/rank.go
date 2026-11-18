@@ -13,9 +13,9 @@ type Candidate struct {
 	Source         string    `json:"source"`
 	SourceIdentity string    `json:"sourceIdentity,omitempty"`
 	CreatedAt      time.Time `json:"createdAt"`
-	Visible   bool      `json:"visible"`
-	Sensitive bool      `json:"sensitive"`
-	Features  Features  `json:"features"`
+	Visible        bool      `json:"visible"`
+	Sensitive      bool      `json:"sensitive"`
+	Features       Features  `json:"features"`
 }
 
 type Features struct {
