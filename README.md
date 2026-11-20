@@ -53,7 +53,7 @@ See [the service contract](testagram-feed/API-CONTRACT.md) and [integration runb
 
 ## Shared integration references
 
-- [Seven-repository ownership and request flow](https://github.com/Trendyzima/testagram-api/blob/main/docs/architecture/service-ownership.md)
+- [Seven-repository ownership and request flow](https://github.com/Trendyzima/testagram-api/blob/main/docs/seven-repository-navigation.md)
 - [Locked end-to-end acceptance gates](https://github.com/Trendyzima/testagram-api/blob/main/docs/integration/locked-seven-repository-acceptance.md)
 - [Machine-readable service registry](https://github.com/Trendyzima/testagram-api/blob/main/contracts/registry/services.json)
 - [Algorithm OpenAPI contract](https://github.com/Trendyzima/testagram-api/blob/main/contracts/upstream/algorithm/openapi.yaml)
