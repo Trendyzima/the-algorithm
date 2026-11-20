@@ -1,32 +1,34 @@
 # Testagram Algorithm API contract
 
-The Algorithm exposes a private ranking API. It is not a public product API and is never called by XClone.
+The Testagram ranking service is private and stateless. It accepts only bounded candidates selected and authorized by Testagram Backend. It never owns product records, identity, visibility, or access decisions.
 
-## Endpoint
-`POST /v1/feed/rank`
+## Feed ranking
 
-`POST /v1/topics/rank`
+- Method/path: `POST /v1/feed/rank`
+- Authentication: dedicated `Authorization: Bearer <INTERNAL_TOKEN>`, private service network only.
+- Required headers: `Content-Type: application/json`, `X-Testagram-API-Version: 1`, and a bounded `X-Request-ID`.
+- Request body: at most 1 MiB; exactly one JSON object; unknown fields rejected.
+- Candidate count: 1–200; result limit: 1–50.
+- Accepted feed modes: `for_you`, `following`, `media`, and `discover`. An omitted mode defaults to `for_you`. `latest` is handled by Backend chronological pagination and is not sent to the ranker. Federated candidates use the same server-selected feed modes.
+- Candidate sources: `native`, `activitypub`, or `atproto`. Source identity is provenance only and never establishes account linking or authorization.
+- Each candidate must have a non-empty bounded ID and author ID, a valid source, and `visible=true`. Candidate IDs must be unique.
+- Ranking features are `following`, `mutualAffinity`, `interestAffinity`, `quality`, `conversation`, `negativeFeedback`, and `reportRisk`. Numeric signals are bounded to [0,1].
+- The ranker returns at most the requested number of unique candidate IDs, finite scores in [0,1], and bounded reason codes. It must never return an ID outside the supplied candidate set.
 
-Ranks 1-200 Backend-authorized public hashtag candidates using seven-day freshness, public-post volume and viewer interest affinity. Each candidate contains a Unicode hashtag `tag`, `postsCount`, `lastUsedAt` and a bounded `interestAffinity` from 0 to 1. The endpoint returns at most 50 deterministically ordered `{tag, postsCount, score, reasons}` entries. Tags are normalized to lowercase and deduplicated; candidates older than seven days or more than five minutes in the future are excluded. The endpoint never discovers candidates or evaluates privacy itself.
+Backend owns candidate retrieval, user/session validation, blocks, mutes, privacy, moderation, visibility, deletion, pagination, canonical hydration, and the final authorization pass after ranking. The ranker must not access Backend PostgreSQL, identity/session stores, object storage, or public client traffic.
 
-Authentication: `Authorization: Bearer <INTERNAL_TOKEN>`, private service network only.
+## Topic ranking
 
-Required headers:
-- `Content-Type: application/json`
-- `X-Testagram-API-Version: 1`
-- `X-Request-ID: <safe request correlation ID>`
+- Method/path: `POST /v1/topics/rank`
+- Same dedicated service bearer, API-version header, request-ID header, content type, body limit, and private-network restriction.
+- Backend supplies 1–200 public hashtag candidates and a result limit of 1–50.
+- The ranker returns only unique normalized tags from the supplied set with bounded scores and known reason codes. Backend owns candidate discovery and final display policy.
 
-Request: `now` is UTC RFC3339; optional `feedMode` is one of `for_you`, `following`, `media` or `discover` (omitted defaults to `for_you`); `candidates` contains 1-200 Backend-authorized candidates with unique `id` (1-256 chars), `authorId` (1-512 chars), `source` (`native`, `activitypub` or `atproto`), optional bounded `sourceIdentity` (up to 2048 chars), `createdAt`, `visible=true`, sensitivity flag and bounded ranking features; `limit` is 1-50. Source/provenance is descriptive only and never grants access or changes authorization. `latest` is intentionally Backend-only and must use chronological pagination rather than this ranker.
+## Operations and failure behavior
 
-Response: `{ "items": [{ "id": "...", "score": 0.0, "reasons": [] }] }`. IDs must be unique and drawn exclusively from the submitted candidate set. Scores are finite and normalized to [0,1]. Feed profiles apply distinct, versioned weights: `following` prioritizes accepted-follow affinity; `media` prioritizes recency and quality after Backend media filtering; `discover` prioritizes interest and quality among Backend-selected public non-followed accounts; `for_you` uses the balanced default. The service never discovers or authorizes candidates.
+- `GET /healthz` reports process liveness; `GET /readyz` reports ranker readiness. These probes do not establish Backend integration or production readiness.
+- Calls have bounded deadlines. The Backend client rejects non-200 responses, redirects, duplicate/foreign IDs, invalid scores, and malformed responses.
+- Ranking is optional until staging acceptance. On ranker outage, Backend uses its safe chronological fallback; it must not widen access or block authentication and publishing.
+- The service bearer is high-entropy, independently rotated, server-side only, and never bundled into Flutter/web or logged.
 
-Backend owns identity, candidate discovery, pagination, blocks, mutes, privacy, visibility, deletion, canonical hydration and the final authorization pass after ranking. The ranker must never fetch user/post records from Backend PostgreSQL, native identity/session stores or object storage and must never return arbitrary IDs. User access and refresh JWTs are never accepted; only the dedicated Backend service bearer is valid.
-
-## Operations
-- `GET /healthz`: process liveness.
-- `GET /readyz`: ranking service readiness.
-- Maximum request body is 1 MiB; malformed/unknown JSON fields fail closed.
-- Internal token must be high entropy, server-side only and independently rotated.
-- Calls have bounded deadlines; no public CORS or browser access.
-
-Canonical product routes and OpenAPI are owned by `Trendyzima/Testagram-backend-`. This repository owns ranking implementation and ranking-specific tests only.
+The canonical product routes and OpenAPI are governed by `Trendyzima/testagram-api`; this repository owns ranking implementation and ranking-specific tests only.
