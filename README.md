@@ -1,6 +1,6 @@
 # Testagram Recommendation and Feed Ranking
 
-This repository contains the private Testagram ranking service in `testagram-feed/`. The deployable service is built from `testagram-feed/Dockerfile`, listens on the private ranking network, and is called only by Testagram Backend.
+This repository ([Trendyzima/the-algorithm](https://github.com/Trendyzima/the-algorithm)) contains the private Testagram ranking service in `testagram-feed/`. The deployable service is built from `testagram-feed/Dockerfile`, listens on the private ranking network, and is called only by Testagram Backend.
 
 ## Product ownership
 
