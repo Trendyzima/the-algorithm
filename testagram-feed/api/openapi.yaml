@@ -40,11 +40,8 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [feedMode, limit, candidates]
+              required: [limit, candidates]
               properties:
-                feedMode:
-                  type: string
-                  enum: [for_you, following, media, discover]
                 now: {type: string, format: date-time}
                 limit: {type: integer, minimum: 1, maximum: 50}
                 candidates:
@@ -113,7 +110,7 @@ paths:
               properties:
                 now: {type: string, format: date-time}
                 limit: {type: integer, minimum: 1, maximum: 50}
-                feedMode: {type: string, enum: [for_you, following, latest, media, discover, federated], description: Server-selected ranking lane. This does not authorize candidates.}
+                feedMode: {type: string, enum: [for_you, following, media, discover], default: for_you, description: Exact accepted values implemented by the ranker. latest uses Backend chronological pagination; federated candidates use the selected supported feed mode. This does not authorize candidates.}
                 candidates:
                   type: array
                   minItems: 1
@@ -132,13 +129,15 @@ paths:
                       createdAt: {type: string, format: date-time}
                       features:
                         type: object
-                        additionalProperties: true
+                        additionalProperties: false
                         properties:
                           following: {type: boolean}
+                          mutualAffinity: {type: number, minimum: 0, maximum: 1}
+                          interestAffinity: {type: number, minimum: 0, maximum: 1}
                           quality: {type: number, minimum: 0, maximum: 1}
                           conversation: {type: number, minimum: 0, maximum: 1}
-                          sourceAffinity: {type: number, minimum: 0, maximum: 1}
-                          freshness: {type: number, minimum: 0, maximum: 1}
+                          negativeFeedback: {type: number, minimum: 0, maximum: 1}
+                          reportRisk: {type: number, minimum: 0, maximum: 1}
                 seenIds: {type: array, maxItems: 500, items: {type: string, maxLength: 256}}
                 blockedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 512}}
                 mutedAuthorIds: {type: array, maxItems: 500, items: {type: string, maxLength: 512}}
