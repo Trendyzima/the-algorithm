@@ -1,5 +1,7 @@
-# Fresh platform — Algorithm boundary
+# Testagram Algorithm integration boundary
 
-Appwrite Auth and Appwrite Database are the new platform's identity and canonical data layer. Algorithm is a private ranking service called only by the Go Backend. It never receives Appwrite server keys, queries Appwrite, accepts browser requests, or makes authorization decisions.
+The Testagram Backend is the sole identity, session, authorization and canonical product-data authority. It validates native user sessions against PostgreSQL before constructing a bounded ranking request. Algorithm is a private ranking service called only by the Go Backend.
 
-Backend supplies bounded candidate batches only after applying blocks, visibility, moderation, privacy and follow rules. Ranking may reorder only supplied IDs. Backend rechecks visibility before returning a feed. No Supabase connection, legacy ID lookup or legacy content import belongs here. Federation remains disabled.
+Algorithm receives only Backend-authorized candidate batches. It never receives user credentials, provider credentials, raw identity evidence, or unrestricted product records. It does not query identity or product databases, accept browser requests, or make authorization decisions.
+
+Backend applies blocks, visibility, moderation, privacy and follow rules before ranking, then rechecks current authorization before returning a feed. Algorithm may reorder only IDs from the submitted candidate set. No external identity-provider or legacy data-provider fallback is permitted. Federation remains governed by its own private service contract.
