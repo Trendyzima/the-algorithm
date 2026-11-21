@@ -14,7 +14,7 @@ The Algorithm ranks only candidate content that Backend has authorized and marke
 3. A permanent post with archived media remains eligible as a post. Media archive state must not remove the post text or engagement from ranking.
 4. A post whose attachment is temporarily restoring may remain eligible only if Backend explicitly marks the post eligible; ranker must not infer availability.
 5. Candidate caches must respect Backend lifecycle version/updated timestamp and have bounded TTL. Invalidation events are hints, not authorization.
-6. Algorithm must not query Appwrite or object providers directly and must not use legacy Supabase records as fallback.
+6. Algorithm must not query identity stores or object providers directly and must not use legacy data-provider records as fallback.
 
 ## Events and consistency
 Backend may publish `story.expired`, `media.deleted`, `media.restored`, and `post.visibility_changed` events with stable event IDs and policy version. Consumers deduplicate by event ID. On event gaps, candidate fetch must revalidate eligibility with Backend. Ranking is never the enforcement boundary.
