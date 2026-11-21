@@ -15,6 +15,7 @@ This is the shared communication contract for the six runtime organs plus the AP
 | `cdn-` | Media/HLS/DASH delivery, cache, origin/shield routing, range handling and playback-token validation | Public media requests and configured private/public origins; no product authorization |
 | `federated-content` | ActivityPub actors, keys, inbox/outbox, signature verification, remote delivery and federation state | Private Backend actor/outbox APIs; remote ActivityPub peers |
 | `the-algorithm` | Stateless feed ordering over an already-authorized bounded candidate set | Private Backend ranking API only |
+| `testagram-api` (control plane; not a runtime) | OpenAPI, private contracts, event schemas, Dart/TypeScript SDKs, immutable source pins and cross-repository compatibility CI | No runtime requests, product data, identity authority or authorization decisions |
 
 ## Canonical request paths
 
