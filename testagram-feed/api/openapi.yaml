@@ -57,6 +57,7 @@ paths:
                       postsCount: {type: integer, minimum: 1, maximum: 1000000000}
                       lastUsedAt: {type: string, format: date-time}
                       interestAffinity: {type: number, minimum: 0, maximum: 1}
+                      momentum: {type: number, minimum: 0, maximum: 1, default: 0, description: Normalized short-term public-post acceleration over the preceding 24-hour window.}
       responses:
         '200':
           description: Deterministically ranked topics, based only on the supplied candidate set
@@ -78,10 +79,10 @@ paths:
                         score: {type: number, minimum: 0, maximum: 1}
                         reasons:
                           type: array
-                          maxItems: 3
+                          maxItems: 4
                           items:
                             type: string
-                            enum: [recent, high-public-volume, matches-viewer-interests]
+                            enum: [recent, high-public-volume, matches-viewer-interests, accelerating]
         '400': {description: Invalid request, tag, timestamp or candidate bounds}
         '401': {description: Invalid internal service bearer}
         '413': {description: Request body too large}
