@@ -100,3 +100,41 @@ func TestValidTopicTagAcceptsUnicodeAndRejectsUnsafeInput(t *testing.T) {
 		}
 	}
 }
+
+func TestRankTopicsRewardsAcceleratingConversations(t *testing.T) {
+	now := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
+	got := RankTopics(TopicRequest{
+		Now:   now,
+		Limit: 5,
+		Candidates: []TopicCandidate{
+			{Tag: "steady", PostsCount: 100, LastUsedAt: now.Add(-time.Hour), InterestAffinity: 0.5, Momentum: 0},
+			{Tag: "rising", PostsCount: 100, LastUsedAt: now.Add(-time.Hour), InterestAffinity: 0.5, Momentum: 1},
+		},
+	})
+	if len(got) != 2 || got[0].Tag != "rising" {
+		t.Fatalf("accelerating topic should rank first: %+v", got)
+	}
+	found := false
+	for _, reason := range got[0].Reasons {
+		if reason == "accelerating" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("accelerating reason missing: %+v", got[0])
+	}
+}
+
+func TestRankTopicsRejectsInvalidMomentum(t *testing.T) {
+	now := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
+	got := RankTopics(TopicRequest{
+		Now: now,
+		Candidates: []TopicCandidate{
+			{Tag: "valid", PostsCount: 10, LastUsedAt: now, Momentum: 0.5},
+			{Tag: "invalid", PostsCount: 20, LastUsedAt: now, Momentum: 1.1},
+		},
+	})
+	if len(got) != 1 || got[0].Tag != "valid" {
+		t.Fatalf("invalid momentum candidate was not excluded: %+v", got)
+	}
+}
