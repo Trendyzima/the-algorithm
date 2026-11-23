@@ -104,7 +104,7 @@ func TestValidTopicTagAcceptsUnicodeAndRejectsUnsafeInput(t *testing.T) {
 func TestRankTopicsRewardsAcceleratingConversations(t *testing.T) {
 	now := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
 	got := RankTopics(TopicRequest{
-		Now: now,
+		Now:   now,
 		Limit: 5,
 		Candidates: []TopicCandidate{
 			{Tag: "steady", PostsCount: 100, LastUsedAt: now.Add(-time.Hour), InterestAffinity: 0.5, Momentum: 0},
@@ -116,7 +116,9 @@ func TestRankTopicsRewardsAcceleratingConversations(t *testing.T) {
 	}
 	found := false
 	for _, reason := range got[0].Reasons {
-		if reason == "accelerating" { found = true }
+		if reason == "accelerating" {
+			found = true
+		}
 	}
 	if !found {
 		t.Fatalf("accelerating reason missing: %+v", got[0])
