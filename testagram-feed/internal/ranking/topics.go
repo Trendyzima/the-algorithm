@@ -15,6 +15,7 @@ type TopicCandidate struct {
 	PostsCount       int64     `json:"postsCount"`
 	LastUsedAt       time.Time `json:"lastUsedAt"`
 	InterestAffinity float64   `json:"interestAffinity"`
+	Momentum         float64   `json:"momentum"`
 }
 
 type TopicRequest struct {
@@ -62,7 +63,8 @@ func RankTopics(in TopicRequest) []RankedTopic {
 	for _, candidate := range in.Candidates[:candidateLimit] {
 		tag := strings.ToLower(strings.TrimSpace(candidate.Tag))
 		if !ValidTopicTag(tag) || candidate.PostsCount < 1 || candidate.LastUsedAt.IsZero() ||
-			math.IsNaN(candidate.InterestAffinity) || math.IsInf(candidate.InterestAffinity, 0) {
+			math.IsNaN(candidate.InterestAffinity) || math.IsInf(candidate.InterestAffinity, 0) ||
+			math.IsNaN(candidate.Momentum) || math.IsInf(candidate.Momentum, 0) || candidate.Momentum < 0 || candidate.Momentum > 1 {
 			continue
 		}
 		age := now.Sub(candidate.LastUsedAt)
@@ -89,10 +91,11 @@ func RankTopics(in TopicRequest) []RankedTopic {
 		recency := math.Exp(-math.Ln2 * age.Hours() / 24)
 		volume := math.Log1p(float64(candidate.PostsCount)) / math.Log1p(float64(maxCount))
 		affinity := math.Max(0, math.Min(1, candidate.InterestAffinity))
-		score := 0.42*recency + 0.33*volume + 0.25*affinity
+		momentum := candidate.Momentum
+		score := 0.32*recency + 0.28*volume + 0.25*affinity + 0.15*momentum
 		score = math.Max(0, math.Min(1, score))
 
-		reasons := make([]string, 0, 3)
+		reasons := make([]string, 0, 4)
 		if recency >= 0.5 {
 			reasons = append(reasons, "recent")
 		}
@@ -101,6 +104,9 @@ func RankTopics(in TopicRequest) []RankedTopic {
 		}
 		if affinity >= 0.6 {
 			reasons = append(reasons, "matches-viewer-interests")
+		}
+		if momentum >= 0.6 {
+			reasons = append(reasons, "accelerating")
 		}
 		items = append(items, scoredTopic{
 			item:     RankedTopic{Tag: candidate.Tag, PostsCount: candidate.PostsCount, Score: score, Reasons: reasons},
