@@ -109,14 +109,33 @@ func TestRankHonorsSensitivePreferenceAndFutureTimestamps(t *testing.T) {
 	}
 }
 
-func TestRankNeverReturnsNonFiniteScores(t *testing.T) {
+func TestRankRejectsCandidatesWithNonFiniteFeatures(t *testing.T) {
 	now := time.Now().UTC()
-	got := Rank(Request{Now: now, Candidates: []Candidate{{
-		ID: "candidate", AuthorID: "author", Visible: true, CreatedAt: now,
-		Features: Features{MutualAffinity: math.NaN(), InterestAffinity: math.Inf(1), Quality: math.Inf(-1)},
-	}}})
-	if len(got) != 1 || math.IsNaN(got[0].Score) || math.IsInf(got[0].Score, 0) || got[0].Score < 0 || got[0].Score > 1 {
-		t.Fatalf("ranker emitted a non-finite or out-of-range score: %#v", got)
+	got := Rank(Request{Now: now, Candidates: []Candidate{
+		{
+			ID: "nan-mutual", AuthorID: "author-a", Visible: true, CreatedAt: now,
+			Features: Features{MutualAffinity: math.NaN()},
+		},
+		{
+			ID: "positive-infinite-interest", AuthorID: "author-b", Visible: true, CreatedAt: now,
+			Features: Features{InterestAffinity: math.Inf(1)},
+		},
+		{
+			ID: "negative-infinite-quality", AuthorID: "author-c", Visible: true, CreatedAt: now,
+			Features: Features{Quality: math.Inf(-1)},
+		},
+		{
+			ID: "nan-negative-feedback", AuthorID: "author-d", Visible: true, CreatedAt: now,
+			Features: Features{NegativeFeedback: math.NaN()},
+		},
+		{
+			ID: "nan-report-risk", AuthorID: "author-e", Visible: true, CreatedAt: now,
+			Features: Features{ReportRisk: math.NaN()},
+		},
+		{ID: "valid", AuthorID: "author-valid", Visible: true, CreatedAt: now, Features: Features{Quality: 0.8}},
+	}})
+	if len(got) != 1 || got[0].ID != "valid" || math.IsNaN(got[0].Score) || math.IsInf(got[0].Score, 0) || got[0].Score < 0 || got[0].Score > 1 {
+		t.Fatalf("ranker must reject corrupt feature vectors and retain finite candidates: %#v", got)
 	}
 }
 
