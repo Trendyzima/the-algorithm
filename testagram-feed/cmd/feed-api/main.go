@@ -50,7 +50,7 @@ func newHandler(token string) http.Handler {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
 	})
 	mux.HandleFunc("POST /v1/feed/rank", func(w http.ResponseWriter, r *http.Request) {
-		if !constantTimeBearer(r.Header.Get("Authorization"), token) {
+		if !constantTimeBearerValues(r.Header.Values("Authorization"), token) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 			return
 		}
@@ -135,13 +135,17 @@ func env(key, fallback string) string {
 	}
 	return fallback
 }
-func constantTimeBearer(header, expected string) bool {
+func constantTimeBearerValues(values []string, expected string) bool {
+	if len(values) != 1 {
+		return false
+	}
 	const prefix = "Bearer "
+	header := values[0]
 	if !strings.HasPrefix(header, prefix) {
 		return false
 	}
-	actual := strings.TrimSpace(strings.TrimPrefix(header, prefix))
-	if len(actual) != len(expected) {
+	actual := strings.TrimPrefix(header, prefix)
+	if actual == "" || actual != strings.TrimSpace(actual) || strings.ContainsAny(actual, " \\t\\r\\n") || len(actual) != len(expected) {
 		return false
 	}
 	var diff byte
