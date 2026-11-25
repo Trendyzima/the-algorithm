@@ -145,7 +145,7 @@ func constantTimeBearerValues(values []string, expected string) bool {
 		return false
 	}
 	actual := strings.TrimPrefix(header, prefix)
-	if actual == "" || actual != strings.TrimSpace(actual) || strings.ContainsAny(actual, " \\t\\r\\n") || len(actual) != len(expected) {
+	if actual == "" || actual != strings.TrimSpace(actual) || strings.ContainsAny(actual, " \t\r\n") || len(actual) != len(expected) {
 		return false
 	}
 	var diff byte
