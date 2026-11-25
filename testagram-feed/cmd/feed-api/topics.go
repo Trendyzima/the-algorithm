@@ -14,7 +14,7 @@ import (
 
 func topicRankHandler(token string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !constantTimeBearer(r.Header.Get("Authorization"), token) {
+		if !constantTimeBearerValues(r.Header.Values("Authorization"), token) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 			return
 		}

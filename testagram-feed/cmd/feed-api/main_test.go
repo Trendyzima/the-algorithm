@@ -164,3 +164,27 @@ func TestRankAcceptsNamedFeedProfilesAndRejectsLatest(t *testing.T) {
 		}
 	}
 }
+
+func TestRankRejectsDuplicateAndWhitespaceAuthorization(t *testing.T) {
+	cases := [][]string{
+		{"Bearer " + testToken, "Bearer " + testToken},
+		{"Bearer invalid", "Bearer " + testToken},
+		{" Bearer " + testToken},
+		{"Bearer " + testToken + " "},
+		{"Bearer " + testToken + " extra"},
+	}
+	for _, values := range cases {
+		req := httptest.NewRequest(http.MethodPost, "/v1/feed/rank", strings.NewReader(validRequest))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Testagram-API-Version", "1")
+		req.Header.Set("X-Request-ID", "auth-ambiguity")
+		for _, value := range values {
+			req.Header.Add("Authorization", value)
+		}
+		rr := httptest.NewRecorder()
+		newHandler(testToken).ServeHTTP(rr, req)
+		if rr.Code != http.StatusUnauthorized {
+			t.Fatalf("Authorization values %#v status=%d, want 401", values, rr.Code)
+		}
+	}
+}
