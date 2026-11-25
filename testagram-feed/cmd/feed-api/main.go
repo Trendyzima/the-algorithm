@@ -154,6 +154,10 @@ func constantTimeBearerValues(values []string, expected string) bool {
 	}
 	return diff == 0
 }
+func constantTimeBearer(header, expected string) bool {
+	return constantTimeBearerValues([]string{header}, expected)
+}
+
 func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
