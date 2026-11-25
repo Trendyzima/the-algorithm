@@ -107,6 +107,12 @@ func Rank(in Request) []Result {
 		if c.Sensitive && !in.AllowSensitive {
 			continue
 		}
+		// Non-finite ranking inputs are corrupted or untrusted feature data.
+		// Reject the candidate instead of letting clamp01 silently turn NaN
+		// into a neutral score and allowing it into a personalized feed.
+		if !finiteFeatures(c.Features) {
+			continue
+		}
 		// Report risk is a safety signal: non-finite values must never be
 		// normalized to zero by clamp01, because that would turn corrupt or
 		// missing risk data into an apparent clean bill of health.
@@ -231,6 +237,23 @@ func stringSet(values []string) map[string]struct{} {
 		}
 	}
 	return out
+}
+
+func finiteFeatures(f Features) bool {
+	values := [...]float64{
+		f.MutualAffinity,
+		f.InterestAffinity,
+		f.Quality,
+		f.Conversation,
+		f.NegativeFeedback,
+		f.ReportRisk,
+	}
+	for _, value := range values {
+		if math.IsNaN(value) || math.IsInf(value, 0) {
+			return false
+		}
+	}
+	return true
 }
 
 func clamp01(v float64) float64 {
