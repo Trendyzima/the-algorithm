@@ -28,3 +28,7 @@ This contract does not claim that the upstream X recommendation repository is al
 - The ranker accepts at most 200 authorized candidates and returns at most the requested 50 IDs. It does not fetch, hydrate or authorize posts.
 - Responses are private/no-store. The service echoes the request ID and API version headers.
 - The Backend owns retries and fallback policy. Do not retry a ranking POST automatically unless the caller explicitly treats the operation as safe.
+
+## Identity-independent account and ranking boundary
+
+The Algorithm is a ranking organ, not an account-registration, authentication or identity-verification authority. Backend sends only bounded candidate IDs and ranking features after applying canonical account, visibility, block, moderation and authorization rules. The ranker must not require or infer government-ID status, selfie status, identity evidence, manual identity review or identity approval to create an account, establish a session, or rank otherwise-authorized content. Identity-assurance state is not an input to ordinary account eligibility or ranking. Algorithm availability or ranking failure must not block native signup, email verification, login, refresh or logout; Backend retains its existing safe fallback behavior.
